@@ -12189,6 +12189,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    '<span id="total"></span>' +
 	    '<button type="button" class="ag-paging-button" id="btNext">[NEXT]</button>' +
 	    '<button type="button" class="ag-paging-button" id="btLast">[LAST]</button>' +
+		'</span>' +
+        '<span>' +
+        '<button type="button" class="ag-paging-button" id="btJumpToPage">[JUMPTOPAGE]</button>' +
+        '<input type="number" id="inputJumpToPage" min="1" />'
 	    '</span>' +
 	    '</div>';
 	var PaginationController = (function () {
@@ -12389,6 +12393,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.currentPage = this.totalPages - 1;
 	        this.loadPage();
 	    };
+		PaginationController.prototype.onBtJumpToPage = function (page) {
+            if (this.currentPage !== page - 1) {
+                this.currentPage = page - 1;
+                this.loadPage();
+        	}
+        };
 	    PaginationController.prototype.isZeroPagesToDisplay = function () {
 	        return this.foundMaxRow && this.totalPages === 0;
 	    };
@@ -12413,7 +12423,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            .replace('[FIRST]', localeTextFunc('first', 'First'))
 	            .replace('[PREVIOUS]', localeTextFunc('previous', 'Previous'))
 	            .replace('[NEXT]', localeTextFunc('next', 'Next'))
-	            .replace('[LAST]', localeTextFunc('last', 'Last'));
+	            .replace('[LAST]', localeTextFunc('last', 'Last'))
+				.replace('[JUMPTOPAGE]', localeTextFunc('jumpTo', 'Jump to'));
 	    };
 	    PaginationController.prototype.getGui = function () {
 	        return this.eGui;
@@ -12424,6 +12435,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.btPrevious = this.eGui.querySelector('#btPrevious');
 	        this.btFirst = this.eGui.querySelector('#btFirst');
 	        this.btLast = this.eGui.querySelector('#btLast');
+			this.btJumpToPage = this.eGui.querySelector('#btJumpToPage');
+            this.inputJumpToPage = this.eGui.querySelector('#inputJumpToPage');
 	        this.lbCurrent = this.eGui.querySelector('#current');
 	        this.lbTotal = this.eGui.querySelector('#total');
 	        this.lbRecordCount = this.eGui.querySelector('#recordCount');
@@ -12443,6 +12456,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.btLast.addEventListener('click', function () {
 	            that.onBtLast();
 	        });
+			this.btJumpToPage.addEventListener('click', function () {
+                that.onBtJumpToPage(parseInt(that.inputJumpToPage.value));
+            });
 	    };
 	    __decorate([
 	        context_2.Autowired('filterManager'), 
