@@ -1,4 +1,4 @@
-// Type definitions for ag-grid v5.0.7
+// Type definitions for ag-grid v5.3.1
 // Project: http://www.ag-grid.com/
 // Definitions by: Niall Crosby <https://github.com/ceolter/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -16,28 +16,37 @@ export declare class RenderedRow {
     private context;
     private focusedCellController;
     private cellRendererService;
-    ePinnedLeftRow: HTMLElement;
-    ePinnedRightRow: HTMLElement;
-    eBodyRow: HTMLElement;
-    private eLeftCenterAndRightRows;
+    private gridPanel;
+    private ePinnedLeftRow;
+    private ePinnedRightRow;
+    private eBodyRow;
+    private eFullWidthRow;
+    private eAllRowContainers;
+    private fullWidthRowComponent;
     private renderedCells;
     private scope;
     private rowNode;
     private rowIndex;
-    private rowIsHeaderThatSpans;
+    private fullWidthRow;
+    private fullWidthCellRenderer;
+    private fullWidthCellRendererParams;
     private parentScope;
     private rowRenderer;
     private eBodyContainer;
+    private eFullWidthContainer;
     private ePinnedLeftContainer;
     private ePinnedRightContainer;
-    private eGroupRow;
-    private eGroupRowPaddingCentre;
-    private eGroupRowPaddingRight;
     private destroyFunctions;
     private renderedRowEventService;
     private initialised;
-    constructor(parentScope: any, rowRenderer: RowRenderer, eBodyContainer: HTMLElement, ePinnedLeftContainer: HTMLElement, ePinnedRightContainer: HTMLElement, node: RowNode, rowIndex: number);
+    constructor(parentScope: any, rowRenderer: RowRenderer, eBodyContainer: HTMLElement, eFullWidthContainer: HTMLElement, ePinnedLeftContainer: HTMLElement, ePinnedRightContainer: HTMLElement, node: RowNode, rowIndex: number);
+    private setupRowContainers();
+    private setupFullWidthContainers();
+    private addMouseWheelListenerToFullWidthRow();
+    private setupFullWidthGroupContainers();
+    private setupNormalContainers();
     init(): void;
+    private addDataChangedListener();
     private angular1Compile(element);
     private addColumnListener();
     private onDisplayedColumnsChanged(event);
@@ -47,15 +56,14 @@ export declare class RenderedRow {
     private removeRenderedCells(colIds);
     private ensureCellInCorrectRow(renderedCell);
     private getOrCreateCell(column);
+    private onRowSelected();
     private addRowSelectedListener();
     private addHoverFunctionality();
     private addHoverClass(hover);
     private addCellFocusedListener();
     forEachRenderedCell(callback: (renderedCell: RenderedCell) => void): void;
     private addNodeDataChangedListener();
-    private createContainers();
-    private attachContainers();
-    onMouseEvent(eventName: string, mouseEvent: MouseEvent, eventSource: HTMLElement, cell: GridCell): void;
+    onMouseEvent(eventName: string, mouseEvent: MouseEvent, cell: GridCell): void;
     private setTopAndHeightCss();
     private addRowIds();
     addEventListener(eventType: string, listener: Function): void;
@@ -66,16 +74,22 @@ export declare class RenderedRow {
     private destroyScope();
     isDataInList(rows: any[]): boolean;
     isGroup(): boolean;
-    private refreshGroupRow();
+    private refreshFullWidthComponent();
+    private createFullWidthComponent();
+    private destroyFullWidthComponent();
+    private createFullWidthParams(eRow);
     private createGroupSpanningEntireRowCell(padding);
     private createChildScopeOrNull(data);
-    private addDynamicStyles();
+    private addStyleFromRowStyle();
+    private addStyleFromRowStyleFunc();
     private createParams();
     private createEvent(event, eventSource);
-    private createRowContainer();
-    onRowClicked(event: MouseEvent): void;
+    private createRowContainer(eParent);
+    private onRowDblClick(event);
+    onRowClick(event: MouseEvent): void;
     getRowNode(): any;
-    getRowIndex(): any;
     refreshCells(colIds: string[], animate: boolean): void;
-    private addDynamicClasses();
+    private addClassesFromRowClassFunc();
+    private addGridClasses();
+    private addClassesFromRowClass();
 }

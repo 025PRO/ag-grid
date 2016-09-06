@@ -1,6 +1,6 @@
 /**
  * ag-grid - Advanced Data Grid / Data Table supporting Javascript / React / AngularJS / Web Components
- * @version v5.0.7
+ * @version v5.3.1
  * @link http://www.ag-grid.com/
  * @license MIT
  */
@@ -68,15 +68,18 @@ var RowRenderer = (function () {
         this.setMainRowWidths();
     };
     RowRenderer.prototype.getContainersFromGridPanel = function () {
+        this.eFullWidthContainer = this.gridPanel.getFullWidthCellContainer();
         this.eBodyContainer = this.gridPanel.getBodyContainer();
         this.ePinnedLeftColsContainer = this.gridPanel.getPinnedLeftColsContainer();
         this.ePinnedRightColsContainer = this.gridPanel.getPinnedRightColsContainer();
         this.eFloatingTopContainer = this.gridPanel.getFloatingTopContainer();
         this.eFloatingTopPinnedLeftContainer = this.gridPanel.getPinnedLeftFloatingTop();
         this.eFloatingTopPinnedRightContainer = this.gridPanel.getPinnedRightFloatingTop();
+        this.eFloatingTopFullWidthContainer = this.gridPanel.getFloatingTopFullWidthCellContainer();
         this.eFloatingBottomContainer = this.gridPanel.getFloatingBottomContainer();
         this.eFloatingBottomPinnedLeftContainer = this.gridPanel.getPinnedLeftFloatingBottom();
         this.eFloatingBottomPinnedRightContainer = this.gridPanel.getPinnedRightFloatingBottom();
+        this.eFloatingBottomFullWithContainer = this.gridPanel.getFloatingBottomFullWidthCellContainer();
         this.eBodyViewport = this.gridPanel.getBodyViewport();
         this.eAllBodyContainers = [this.eBodyContainer, this.eFloatingBottomContainer,
             this.eFloatingTopContainer];
@@ -115,10 +118,10 @@ var RowRenderer = (function () {
         });
     };
     RowRenderer.prototype.refreshAllFloatingRows = function () {
-        this.refreshFloatingRows(this.renderedTopFloatingRows, this.floatingRowModel.getFloatingTopRowData(), this.eFloatingTopPinnedLeftContainer, this.eFloatingTopPinnedRightContainer, this.eFloatingTopContainer);
-        this.refreshFloatingRows(this.renderedBottomFloatingRows, this.floatingRowModel.getFloatingBottomRowData(), this.eFloatingBottomPinnedLeftContainer, this.eFloatingBottomPinnedRightContainer, this.eFloatingBottomContainer);
+        this.refreshFloatingRows(this.renderedTopFloatingRows, this.floatingRowModel.getFloatingTopRowData(), this.eFloatingTopPinnedLeftContainer, this.eFloatingTopPinnedRightContainer, this.eFloatingTopContainer, this.eFloatingTopFullWidthContainer);
+        this.refreshFloatingRows(this.renderedBottomFloatingRows, this.floatingRowModel.getFloatingBottomRowData(), this.eFloatingBottomPinnedLeftContainer, this.eFloatingBottomPinnedRightContainer, this.eFloatingBottomContainer, this.eFloatingBottomFullWithContainer);
     };
-    RowRenderer.prototype.refreshFloatingRows = function (renderedRows, rowNodes, pinnedLeftContainer, pinnedRightContainer, bodyContainer) {
+    RowRenderer.prototype.refreshFloatingRows = function (renderedRows, rowNodes, ePinnedLeftContainer, ePinnedRightContainer, eBodyContainer, eFullWidthContainer) {
         var _this = this;
         renderedRows.forEach(function (row) {
             row.destroy();
@@ -131,7 +134,7 @@ var RowRenderer = (function () {
         }
         if (rowNodes) {
             rowNodes.forEach(function (node, rowIndex) {
-                var renderedRow = new renderedRow_1.RenderedRow(_this.$scope, _this, bodyContainer, pinnedLeftContainer, pinnedRightContainer, node, rowIndex);
+                var renderedRow = new renderedRow_1.RenderedRow(_this.$scope, _this, eBodyContainer, eFullWidthContainer, ePinnedLeftContainer, ePinnedRightContainer, node, rowIndex);
                 _this.context.wireBean(renderedRow);
                 renderedRows.push(renderedRow);
             });
@@ -144,6 +147,7 @@ var RowRenderer = (function () {
         if (!this.gridOptionsWrapper.isForPrint()) {
             var containerHeight = this.rowModel.getRowCombinedHeight();
             this.eBodyContainer.style.height = containerHeight + "px";
+            this.eFullWidthContainer.style.height = containerHeight + "px";
             this.ePinnedLeftColsContainer.style.height = containerHeight + "px";
             this.ePinnedRightColsContainer.style.height = containerHeight + "px";
         }
@@ -228,11 +232,11 @@ var RowRenderer = (function () {
         // called to whats rendered. if the row isn't rendered, we don't care
         var indexesToRemove = [];
         var renderedRows = this.renderedRows;
-        Object.keys(renderedRows).forEach(function (key) {
-            var renderedRow = renderedRows[key];
+        Object.keys(renderedRows).forEach(function (index) {
+            var renderedRow = renderedRows[index];
             // see if the rendered row is in the list of rows we have to update
             if (renderedRow.isDataInList(rows)) {
-                indexesToRemove.push(key);
+                indexesToRemove.push(index);
             }
         });
         // remove the rows
@@ -254,13 +258,13 @@ var RowRenderer = (function () {
     };
     // public - removes the group rows and then redraws them again
     RowRenderer.prototype.refreshGroupRows = function () {
+        var _this = this;
         // find all the group rows
         var rowsToRemove = [];
-        var that = this;
-        Object.keys(this.renderedRows).forEach(function (key) {
-            var renderedRow = that.renderedRows[key];
+        Object.keys(this.renderedRows).forEach(function (index) {
+            var renderedRow = _this.renderedRows[index];
             if (renderedRow.isGroup()) {
-                rowsToRemove.push(key);
+                rowsToRemove.push(index);
             }
         });
         // remove the rows
@@ -366,7 +370,7 @@ var RowRenderer = (function () {
         //var end = new Date().getTime();
         //console.log(end-start);
     };
-    RowRenderer.prototype.onMouseEvent = function (eventName, mouseEvent, eventSource, cell) {
+    RowRenderer.prototype.onMouseEvent = function (eventName, mouseEvent, cell) {
         var renderedRow;
         switch (cell.floating) {
             case constants_1.Constants.FLOATING_TOP:
@@ -380,7 +384,7 @@ var RowRenderer = (function () {
                 break;
         }
         if (renderedRow) {
-            renderedRow.onMouseEvent(eventName, mouseEvent, eventSource, cell);
+            renderedRow.onMouseEvent(eventName, mouseEvent, cell);
         }
     };
     RowRenderer.prototype.insertRow = function (node, rowIndex) {
@@ -389,7 +393,7 @@ var RowRenderer = (function () {
         if (utils_1.Utils.missingOrEmpty(columns)) {
             return;
         }
-        var renderedRow = new renderedRow_1.RenderedRow(this.$scope, this, this.eBodyContainer, this.ePinnedLeftColsContainer, this.ePinnedRightColsContainer, node, rowIndex);
+        var renderedRow = new renderedRow_1.RenderedRow(this.$scope, this, this.eBodyContainer, this.eFullWidthContainer, this.ePinnedLeftColsContainer, this.ePinnedRightColsContainer, node, rowIndex);
         this.context.wireBean(renderedRow);
         this.renderedRows[rowIndex] = renderedRow;
     };

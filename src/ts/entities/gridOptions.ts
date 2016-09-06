@@ -160,6 +160,11 @@ export interface GridOptions {
     getRowStyle?: Function;
     getRowClass?: Function;
     getRowHeight?: Function;
+
+    fullWidthCellRenderer?: {new(): ICellRenderer} | ICellRendererFunc | string;
+    fullWidthCellRendererParams?: any;
+    isFullWidthCell?(rowNode: RowNode): boolean;
+
     headerCellRenderer?: any;
     groupRowAggNodes?(nodes: RowNode[]): any;
     getBusinessKeyForNode?(node: RowNode): string;
@@ -168,6 +173,7 @@ export interface GridOptions {
     getContextMenuItems?: GetContextMenuItems;
     getMainMenuItems?: GetMainMenuItems;
     getRowNodeId?: GetRowNodeIdFunc;
+    doesDataFlower?(dataItem: any): boolean;
     processRowPostCreate?(params: ProcessRowParams): void;
     processCellForClipboard?(params: ProcessCellForExportParams): any;
 

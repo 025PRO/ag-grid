@@ -8,6 +8,9 @@ import {GridOptionsWrapper} from "./gridOptionsWrapper";
 import {ProcessCellForExportParams, ProcessHeaderForExportParams} from "./entities/gridOptions";
 import {Constants} from "./constants";
 import {IInMemoryRowModel} from "./interfaces/iInMemoryRowModel";
+import {FloatingRowModel} from "./rowControllers/floatingRowModel";
+import {ColDef} from "./entities/colDef";
+import {Utils as _} from "./utils";
 
 var LINE_SEPARATOR = '\r\n';
 
@@ -15,7 +18,10 @@ export interface CsvExportParams {
     skipHeader?: boolean;
     skipFooters?: boolean;
     skipGroups?: boolean;
+    skipFloatingTop?: boolean;
+    skipFloatingBottom?: boolean;
     suppressQuotes?: boolean;
+    columnKeys?: (Column|ColDef|string)[]
     fileName?: string;
     customHeader?: string;
     customFooter?: string;
@@ -30,6 +36,7 @@ export interface CsvExportParams {
 export class CsvCreator {
 
     @Autowired('rowModel') private rowModel: IRowModel;
+    @Autowired('floatingRowModel') private floatingRowModel: FloatingRowModel;
     @Autowired('columnController') private columnController: ColumnController;
     @Autowired('valueService') private valueService: ValueService;
     @Autowired('gridOptionsWrapper') private gridOptionsWrapper: GridOptionsWrapper;
@@ -71,12 +78,15 @@ export class CsvCreator {
         var skipGroups = params && params.skipGroups;
         var skipHeader = params && params.skipHeader;
         var skipFooters = params && params.skipFooters;
+        var skipFloatingTop = params && params.skipFloatingTop;
+        var skipFloatingBottom = params && params.skipFloatingBottom;
         var includeCustomHeader = params && params.customHeader;
         var includeCustomFooter = params && params.customFooter;
         var allColumns = params && params.allColumns;
         var onlySelected = params && params.onlySelected;
         var columnSeparator = (params && params.columnSeparator) || ',';
         var suppressQuotes = params && params.suppressQuotes;
+        var columnKeys = params && params.columnKeys;
         var processCellCallback = params && params.processCellCallback;
         var processHeaderCallback = params && params.processHeaderCallback;
 
@@ -85,7 +95,9 @@ export class CsvCreator {
         var isRowGrouping = this.columnController.getRowGroupColumns().length > 0;
 
         var columnsToExport: Column[];
-        if (allColumns && !isPivotMode) {
+        if (_.existsAndNotEmpty(columnKeys)) {
+            columnsToExport = this.columnController.getGridColumns(columnKeys);
+        } else if (allColumns && !isPivotMode) {
             columnsToExport = this.columnController.getAllPrimaryColumns();
         } else {
             columnsToExport = this.columnController.getAllDisplayedColumns();
@@ -105,11 +117,15 @@ export class CsvCreator {
             result += LINE_SEPARATOR;
         }
 
+        this.floatingRowModel.forEachFloatingTopRow(processRow);
+
         if (isPivotMode) {
             inMemoryRowModel.forEachPivotNode(processRow);
         } else {
             inMemoryRowModel.forEachNodeAfterFilterAndSort(processRow);
         }
+
+        this.floatingRowModel.forEachFloatingBottomRow(processRow);
 
         if (includeCustomFooter) {
             result += params.customFooter;
@@ -121,6 +137,10 @@ export class CsvCreator {
             if (skipFooters && node.footer) { return; }
 
             if (onlySelected && !node.isSelected()) { return; }
+
+            if (skipFloatingTop && node.floating==='top') { return; }
+
+            if (skipFloatingBottom && node.floating==='bottom') { return; }
 
             // if we are in pivotMode, then the grid will show the root node only
             // if it's not a leaf group

@@ -37,6 +37,10 @@ export class RowNode {
     public level: number;
     /** True if this node is a group node (ie has children) */
     public group: boolean;
+    /** True if this node can flower (ie can be expanded, but has no direct children) */
+    public canFlower: boolean;
+    /** True if this node is a flower */
+    public flower: boolean;
     /** True if this node is a group and the group is the bottom level in the tree */
     public leafGroup: boolean;
     /** True if this is the first child in this group */
@@ -113,6 +117,11 @@ export class RowNode {
             // this is important for virtual pagination and viewport, where empty rows exist.
             if (this.data) {
                 this.id = getRowNodeId(this.data);
+            } else {
+                // this can happen if user has set blank into the rowNode after the row previously
+                // having data. this happens in virtual page row model, when data is delete and
+                // the page is refreshed.
+                this.id = undefined;
             }
         } else {
             this.id = id;
@@ -139,6 +148,10 @@ export class RowNode {
 
     public resetQuickFilterAggregateText(): void {
         this.quickFilterAggregateText = null;
+    }
+
+    public isExpandable(): boolean {
+        return this.group || this.canFlower;
     }
 
     public isSelected(): boolean {
@@ -195,7 +208,7 @@ export class RowNode {
     private calculateSelectedFromChildrenBubbleUp(): void {
         this.calculateSelectedFromChildren();
         if (this.parent) {
-            this.parent.calculateSelectedFromChildren();
+            this.parent.calculateSelectedFromChildrenBubbleUp();
         }
     }
 
